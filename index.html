@@ -1,5 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
@@ -732,6 +735,21 @@
      JAVASCRIPT
 ═══════════════════════════════════════════════ -->
 <script>
+  const firebaseConfig = {
+  apiKey: "AIzaSyDPjiI5tsWr4jAJGZ6MOhg4vmuXZqBf8",
+  authDomain: "expense-tracker-9af6a.firebaseapp.com",
+  projectId: "expense-tracker-9af6a",
+  storageBucket: "expense-tracker-9af6a.firebasestorage.app",
+  messagingSenderId: "358851954160",
+  appId: "1:358851954160:web:9188833dc9eff20f890983",
+  measurementId: "G-5C8X41VTHW"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
+const db = firebase.firestore();
 // ── STATE ──
 let state = {
   users: JSON.parse(localStorage.getItem('zl_users') || '{}'),
