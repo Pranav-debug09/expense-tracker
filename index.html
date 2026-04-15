@@ -818,38 +818,27 @@ function toggleAuthMode() {
 function handleAuth() {
   const email = document.getElementById('authEmail').value.trim();
   const password = document.getElementById('authPassword').value;
-  const errEl = document.getElementById('authError');
 
-  if (!email || !password) { showAuthError('Please fill in all fields.'); return; }
-  if (!/\S+@\S+\.\S+/.test(email)) { showAuthError('Invalid email address.'); return; }
-  if (password.length < 6) { showAuthError('Password must be at least 6 characters.'); return; }
+  if (!email || !password) {
+    alert("Fill all fields");
+    return;
+  }
 
   if (isSignupMode) {
-    if (state.users[email]) { showAuthError('Account already exists. Please login.'); return; }
-    const name = document.getElementById('signupName').value.trim() || email.split('@')[0];
-    state.users[email] = { password, name };
-    localStorage.setItem('zl_users', JSON.stringify(state.users));
-    state.currentUser = email;
-    localStorage.setItem('zl_current', email);
-    errEl.classList.add('hidden');
-    goTo('page-profile');
+    auth.createUserWithEmailAndPassword(email, password)
+      .then(user => {
+        state.currentUser = user.user.uid;
+        goTo('page-profile');
+      })
+      .catch(err => alert(err.message));
   } else {
-    const user = state.users[email];
-    if (!user || user.password !== password) { showAuthError('Invalid email or password.'); return; }
-    state.currentUser = email;
-    localStorage.setItem('zl_current', email);
-    errEl.classList.add('hidden');
-    // Load saved data
-    const saved = localStorage.getItem(`zl_data_${email}`);
-    if (saved) {
-      const d = JSON.parse(saved);
-      state.expenses = d.expenses || [];
-      state.profile = d.profile || {};
-      renderDashboard();
-      goTo('page-dashboard');
-    } else {
-      goTo('page-profile');
-    }
+    auth.signInWithEmailAndPassword(email, password)
+      .then(user => {
+        state.currentUser = user.user.uid;
+        loadUserData();
+        goTo('page-dashboard');
+      })
+      .catch(err => alert(err.message));
   }
 }
 
@@ -1233,10 +1222,23 @@ function formatDate(d) {
 
 function saveData() {
   if (!state.currentUser) return;
-  localStorage.setItem(`zl_data_${state.currentUser}`, JSON.stringify({
+
+  db.collection("users").doc(state.currentUser).set({
     expenses: state.expenses,
     profile: state.profile
-  }));
+  });
+}
+
+function loadUserData() {
+  db.collection("users").doc(state.currentUser).get()
+    .then(doc => {
+      if (doc.exists) {
+        const data = doc.data();
+        state.expenses = data.expenses || [];
+        state.profile = data.profile || {};
+        renderDashboard();
+      }
+    });
 }
 
 // ── INIT ──
@@ -1256,6 +1258,16 @@ if (state.currentUser && state.users[state.currentUser]) {
     goTo('page-dashboard');
   }
 }
+
+auth.onAuthStateChanged(user => {
+  if (user) {
+    state.currentUser = user.uid;
+    loadUserData();
+    goTo('page-dashboard');
+  } else {
+    goTo('page-login');
+  }
+});
 </script>
 </body>
 </html>
